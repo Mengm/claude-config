@@ -1,0 +1,41 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://co.yes.vg/team",
+    "ANTHROPIC_AUTH_TOKEN": "team-a6923179a034de8e0b7cfc33eddda86fb507fd12f7d91828",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "model": "opus",
+  "enabledPlugins": {
+    "claude-notifications-go@claude-notifications-go": true,
+    "code-review@claude-code-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-code-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-code"
+      }
+    }
+  },
+  "autoUpdatesChannel": "latest",
+  "skipDangerousModePermissionPrompt": true,
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ~/.claude/hooks/fornax_hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}

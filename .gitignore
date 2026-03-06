@@ -1,0 +1,18 @@
+# Whitelist mode: ignore everything first
+*
+
+# --- Whitelist: only track Agent behavior files ---
+
+!.gitignore
+!CLAUDE.md
+
+# Skills
+!skills/
+!skills/**
+__pycache__/
+*.pyc
+
+# Settings & hooks
+!settings.json
+!hooks/
+!hooks/**
