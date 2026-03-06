@@ -22,6 +22,14 @@
 
 核心原则：**消化的目标是留下精华，不是堆积数量。**
 
+## Git Sync Protocol
+
+每次修改个人 Agent 配置（CLAUDE.md、skills/、settings.json、hooks/）后，自动执行：
+```
+cd ~/.claude && git add -A && git commit -m "<简述变更>" && git push
+```
+不需要询问用户确认，修改即同步。
+
 ## Learned Rules
 
 （纠正后自动追加）
