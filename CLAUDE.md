@@ -30,6 +30,11 @@ cd ~/.claude && git add -A && git commit -m "<简述变更>" && git push
 ```
 不需要询问用户确认，修改即同步。
 
+## Writing Style
+
+- **Critical instructions must be written in English** for precision and token efficiency.
+- Descriptive/contextual content may use Chinese for readability.
+
 ## Learned Rules
 
 （纠正后自动追加）
