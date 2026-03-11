@@ -43,4 +43,6 @@ No user confirmation needed — modify and sync immediately.
 
 ## Learned Rules
 
+- **User info → personal CLAUDE.md**: Any user-specific information (email, preferences, credentials, habits) must be saved to personal `~/.claude/CLAUDE.md`, NOT project-level memory files.
+
 （纠正后自动追加）
