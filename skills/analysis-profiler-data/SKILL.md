@@ -1,0 +1,154 @@
+---
+name: analysis-profiler-data
+description: |
+  Unity Profiler .data 文件性能分析。解析 Unity Profiler 二进制采样数据，生成全面的性能报告和卡顿帧分析，并以 Unity 性能专家视角给出优化建议。
+  当用户涉及以下场景时触发：
+  (1) 分析 Unity Profiler 导出的 .data 文件（"分析一下这个 profiler 数据"、"看看性能"、"profiler 分析"）
+  (2) 卡顿/掉帧分析（"卡顿帧分析"、"stutter analysis"、"为什么掉帧"、"帧率不稳"）
+  (3) Unity 性能优化（"帮我看看哪里慢"、"优化建议"、"性能瓶颈"）
+  (4) 用户提供了 .data 文件路径
+  即使用户没有明确说"profiler"，只要涉及 Unity 性能数据文件分析，都应触发此 skill。
+---
+
+# Unity Profiler .data 性能分析
+
+将 Unity Profiler 二进制 `.data` 文件转化为可操作的性能洞察。
+
+## 工具位置
+
+分析脚本位于当前项目仓库中：
+
+```
+Tools/ProfilerParser/
+├── unity_profiler_parser.py   # 主解析器 + 总体分析报告
+└── stutter_analysis.py        # 卡顿帧专项分析
+```
+
+路径相对于项目根目录（即 `$REPO_ROOT/Tools/ProfilerParser/`）。如果当前工作目录不是项目根目录，使用绝对路径。
+
+## 分析流程
+
+### Step 1: 总体性能分析
+
+运行主解析器生成全面报告：
+
+```bash
+python Tools/ProfilerParser/unity_profiler_parser.py "<path_to.data>"
+```
+
+输出自动保存到 `<path_to.data>.analysis.txt`。
+
+报告包含：
+- **帧时间概览**：平均/中位/P90/P95/P99、直方图、变异系数
+- **CPU 时间分类**：Scripts、Rendering、Animation、Physics、UI、Audio 等各类别耗时占比
+- **渲染统计**：DrawCalls、Batches、三角面数、Shadow Casters、SetPass Calls
+- **内存统计**：总内存、GC 分配、纹理/Mesh/音频内存
+- **线程信息**：各线程采样数和 GC 分配量
+- **Top 30 热点 Marker**：按总耗时排序，含平均/最大值和调用次数
+- **GC 分配热点**：引起 GC 分配最多的 Marker
+- **Main Thread 调用树**：展示典型帧的函数调用层级
+- **优化建议**：基于已知 Marker 模式自动生成
+
+可选 JSON 导出：
+```bash
+python Tools/ProfilerParser/unity_profiler_parser.py "<path_to.data>" --json output.json
+```
+
+### Step 2: 卡顿帧分析
+
+运行卡顿帧分析器深入排查掉帧问题：
+
+```bash
+python Tools/ProfilerParser/stutter_analysis.py "<path_to.data>"
+```
+
+输出自动保存到 `<path_to.data>.stutter_analysis.txt`。
+
+报告包含：
+- **帧时间分布**：统计指标 + ASCII 直方图
+- **卡顿检测**：轻微卡顿（>1.5x 中位数）和严重卡顿（>3x 中位数）
+- **连续卡顿检测**：连续多帧超阈值的片段
+- **卡顿帧详细分析**：每个卡顿帧的 Spike 贡献者（对比该 Marker 的全局平均值）
+- **调用树**：卡顿帧的 Main Thread 调用层级
+- **卡顿模式分析**：GPU 等待、脚本、渲染、GC 等分类
+- **周期性检测**：是否存在周期性卡顿
+- **帧时间趋势**：ASCII 趋势图
+
+### Step 3: 专家级解读
+
+读取两份报告后，以 Unity 性能优化专家视角进行深度分析。关注以下维度：
+
+**帧率与稳定性**
+- 目标帧率（30fps=33.3ms, 60fps=16.6ms）是否达标
+- 帧时间变异系数（CV < 0.2 为稳定，> 0.5 为严重不稳定）
+- 卡顿占比是否可接受（< 1% 为优秀）
+
+**CPU 瓶颈定位**
+- Scripts（Lua/C#）占比是否过高（> 30% 需关注）
+- Rendering Pipeline 耗时（SRP Batcher 效率、Shadow 开销）
+- Animation/Physics 是否合理
+- UI 系统开销（Canvas rebuild、Raycaster 数量）
+- GC 分配频率和大小
+
+**GPU 瓶颈信号**
+- `Gfx.WaitForPresentOnGfxThread` 占比大 → GPU 瓶颈
+- Batch/DrawCall 数量（移动端建议 < 500）
+- Shadow Caster 数量（建议 < 200）
+- 三角面数是否合理
+
+**内存风险**
+- 总内存接近设备上限（如 8GB 设备 > 6GB 需警惕）
+- GC 每帧分配量（> 1KB/frame 需优化）
+- 纹理内存占比
+
+**脚本性能**（如有 xLua/ILRuntime）
+- Lua 桥接调用开销
+- C#→Lua 调用频率
+
+**优化建议优先级**
+按影响力排序给出具体可操作的优化建议，每条包含：
+1. 问题描述和量化数据
+2. 根因分析
+3. 具体优化方案
+
+### Step 4: 输出报告（可选）
+
+如果用户需要写入飞书文档，使用 feishu-doc skill 创建文档并写入分析结果。
+
+## 关键 API 注意事项
+
+使用 `unity_profiler_parser.py` 作为库时：
+
+```python
+from unity_profiler_parser import UnityProfilerParser
+
+parser = UnityProfilerParser("path/to/file.data")
+parser.parse()                    # 注意：不返回值，数据存储在 parser 内部
+frames = parser.frames            # List[FrameData]
+markers = parser.markers          # Dict[str, marker_info]
+report = parser.analyze()         # 返回文本报告字符串
+```
+
+**FrameData** 结构：
+- `frame_index`, `real_frame`: 帧索引
+- `total_cpu_us`, `total_gpu_us`: CPU/GPU 微秒
+- `stats`: 包含 `batches`, `triangles`, `mem_total_bytes`, `mem_gc_alloc_bytes` 等
+- `threads`: `List[ThreadInfo]`
+
+**ThreadInfo** 结构：
+- `thread_name`, `group_name`: 线程标识
+- `samples`: `List[SampleInfo]`（按调用树前序遍历排列）
+- `total_gc_alloc`: GC 分配总量
+
+**SampleInfo** 结构：
+- `marker_name`: Marker 名称（不是 `marker_id`）
+- `duration_ns`: 持续时间纳秒（不是 `time_ns`）
+- `start_time_ns`: 起始时间
+- `child_count`: 子采样数量
+- `gc_alloc`: GC 分配字节数
+
+## 支持的格式
+
+- Unity 2022.3 Profiler 二进制 `.data` 文件（Editor 保存格式）
+- 协议版本：0x20170327 ~ 0x20220328
+- 这不是 `.raw` 格式（那是 ProfilerRecorder 输出），需要通过 Unity Editor 的 Profiler 窗口 Save 导出
