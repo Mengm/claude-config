@@ -9,15 +9,15 @@ description: Unity Profiler .data 文件性能分析。解析二进制采样数�
 
 ## 工具位置
 
-分析脚本位于当前项目仓库中：
+分析脚本位于本 skill 目录中：
 
 ```
-Tools/ProfilerParser/
+~/.claude/skills/analysis-profiler-data/scripts/
 ├── unity_profiler_parser.py   # 主解析器 + 总体分析报告
 └── stutter_analysis.py        # 卡顿帧专项分析
 ```
 
-路径相对于项目根目录（即 `$REPO_ROOT/Tools/ProfilerParser/`）。如果当前工作目录不是项目根目录，使用绝对路径。
+使用时通过 `~/.claude/skills/analysis-profiler-data/scripts/` 的绝对路径调用，不依赖任何项目。
 
 ## 分析流程
 
@@ -26,7 +26,7 @@ Tools/ProfilerParser/
 运行主解析器生成全面报告：
 
 ```bash
-python Tools/ProfilerParser/unity_profiler_parser.py "<path_to.data>"
+python ~/.claude/skills/analysis-profiler-data/scripts/unity_profiler_parser.py "<path_to.data>"
 ```
 
 输出自动保存到 `<path_to.data>.analysis.txt`。
@@ -44,7 +44,7 @@ python Tools/ProfilerParser/unity_profiler_parser.py "<path_to.data>"
 
 可选 JSON 导出：
 ```bash
-python Tools/ProfilerParser/unity_profiler_parser.py "<path_to.data>" --json output.json
+python ~/.claude/skills/analysis-profiler-data/scripts/unity_profiler_parser.py "<path_to.data>" --json output.json
 ```
 
 ### Step 2: 卡顿帧分析
@@ -52,7 +52,7 @@ python Tools/ProfilerParser/unity_profiler_parser.py "<path_to.data>" --json out
 运行卡顿帧分析器深入排查掉帧问题：
 
 ```bash
-python Tools/ProfilerParser/stutter_analysis.py "<path_to.data>"
+python ~/.claude/skills/analysis-profiler-data/scripts/stutter_analysis.py "<path_to.data>"
 ```
 
 输出自动保存到 `<path_to.data>.stutter_analysis.txt`。
