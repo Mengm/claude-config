@@ -35,6 +35,12 @@ No user confirmation needed — modify and sync immediately.
 - **Critical instructions must be written in English** for precision and token efficiency.
 - Descriptive/contextual content may use Chinese for readability.
 
+## Feishu Defaults
+
+- **Feishu email**: baiyuan.nuanba@bytedance.com
+- After creating ANY Feishu document (via feishu-cli or lark-mcp), always grant `full_access` permission to this email
+- feishu-cli command: `feishu-cli perm add <doc_id> --doc-type docx --member-type email --member-id baiyuan.nuanba@bytedance.com --perm full_access --notification`
+
 ## Learned Rules
 
 （纠正后自动追加）
