@@ -1,13 +1,6 @@
 ---
 name: analysis-profiler-data
-description: |
-  Unity Profiler .data 文件性能分析。解析 Unity Profiler 二进制采样数据，生成全面的性能报告和卡顿帧分析，并以 Unity 性能专家视角给出优化建议。
-  当用户涉及以下场景时触发：
-  (1) 分析 Unity Profiler 导出的 .data 文件（"分析一下这个 profiler 数据"、"看看性能"、"profiler 分析"）
-  (2) 卡顿/掉帧分析（"卡顿帧分析"、"stutter analysis"、"为什么掉帧"、"帧率不稳"）
-  (3) Unity 性能优化（"帮我看看哪里慢"、"优化建议"、"性能瓶颈"）
-  (4) 用户提供了 .data 文件路径
-  即使用户没有明确说"profiler"，只要涉及 Unity 性能数据文件分析，都应触发此 skill。
+description: Unity Profiler .data 文件性能分析。解析二进制采样数据，生成性能报告和卡顿帧分析，以专家视角给出优化建议并写入飞书文档。触发场景 (1) 分析 Profiler .data 文件 (2) 卡顿/掉帧分析 (3) Unity 性能优化建议 (4) 用户提供 .data 文件路径。即使没有明确说 profiler，只要涉及 Unity 性能数据文件分析都应触发。
 ---
 
 # Unity Profiler .data 性能分析
@@ -111,9 +104,20 @@ python Tools/ProfilerParser/stutter_analysis.py "<path_to.data>"
 2. 根因分析
 3. 具体优化方案
 
-### Step 4: 输出报告（可选）
+### Step 4: 写入飞书文档
 
-如果用户需要写入飞书文档，使用 feishu-doc skill 创建文档并写入分析结果。
+分析完成后，**必须**使用 feishu-doc skill 创建飞书文档并写入完整分析报告。文档标题格式：`"<数据文件名> Profiler 性能分析报告"`。
+
+报告结构建议：
+1. 总体概览（设备/场景/帧数/目标帧率）
+2. 帧时间分析（统计指标 + 分布）
+3. CPU 瓶颈分析（各类别占比 + 热点 Marker）
+4. 渲染管线分析（Batch/DrawCall/Shadow/SRP Batcher）
+5. 内存分析（总内存/GC/纹理）
+6. 卡顿帧分析（检测结果 + 逐帧详情）
+7. 优化建议（按优先级排序，含量化数据和具体方案）
+
+写入完成后，将文档链接发给用户。
 
 ## 关键 API 注意事项
 
