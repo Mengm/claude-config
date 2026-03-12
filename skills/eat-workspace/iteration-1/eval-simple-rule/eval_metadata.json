@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "simple-rule-commit-convention",
+  "prompt": "以后写 git commit message 都用 conventional commits 格式，记住这个规则",
+  "assertions": [
+    {"text": "Correctly identifies the input as a simple rule, doesn't over-analyze", "id": "identifies-as-rule"},
+    {"text": "Recommends Path B (add rule to CLAUDE.md), not creating a new Skill", "id": "recommends-path-B"},
+    {"text": "Proposes exact rule text for the conventional commits convention", "id": "proposes-exact-rule-text"},
+    {"text": "Specifies where in CLAUDE.md the rule should be placed", "id": "mentions-claude-md-location"},
+    {"text": "Mentions git sync after modification", "id": "mentions-git-sync"}
+  ]
+}

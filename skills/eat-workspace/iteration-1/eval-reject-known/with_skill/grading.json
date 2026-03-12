@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "eval_name": "reject-known-python-typing",
+  "configuration": "with_skill",
+  "expectations": [
+    {"text": "Clearly rejects absorption (Path A: Don't Eat)", "passed": true, "evidence": "Recommends 'Path A — Don't Eat (Reject)' with clear reasoning"},
+    {"text": "Explains why: this is general Python knowledge Claude already knows", "passed": true, "evidence": "States 'standard Python knowledge that Claude already knows thoroughly' and references PEP 484/526"},
+    {"text": "Offers an alternative (e.g. save specific typing conventions if user has any)", "passed": true, "evidence": "Ends with '如果你有特定的 typing 约定想让我记住... 我可以把它作为一条规则加入 CLAUDE.md'"},
+    {"text": "Does not attempt to modify any files", "passed": true, "evidence": "No file modifications proposed or executed"}
+  ]
+}

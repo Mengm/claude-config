@@ -1,0 +1,23 @@
+{
+  "skill_name": "eat",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "看看这个 https://github.com/anthropics/claude-code 有什么值得吸收的",
+      "expected_output": "Should run full 5-step workflow: fetch via desk, analyze, impact scan, recommend a digestion path, wait for confirmation",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "以后写 git commit message 都用 conventional commits 格式，记住这个规则",
+      "expected_output": "Should quickly identify this as a simple rule (Path B), propose adding to CLAUDE.md Learned Rules, and execute after confirmation",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "这个 Python typing 教程不错，吃掉它。内容：Python 的 type hints 包括 int, str, list, dict 等基本类型，以及 Optional, Union, List, Dict 等泛型类型。使用 mypy 可以做静态类型检查。",
+      "expected_output": "Should reject (Path A) — this is general Python knowledge Claude already knows. Should explain why and offer to save specific conventions if user has any.",
+      "files": []
+    }
+  ]
+}

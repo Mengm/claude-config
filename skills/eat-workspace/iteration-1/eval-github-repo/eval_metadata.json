@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "github-repo-absorption",
+  "prompt": "看看这个 https://github.com/anthropics/claude-code 有什么值得吸收的",
+  "assertions": [
+    {"text": "Output contains all 5 steps of the eat workflow (input identification, deep analysis, impact scan, digestion recommendation, execution/confirmation)", "id": "has-5-step-structure"},
+    {"text": "Step 1 mentions delegating to desk skill for GitHub repo cloning", "id": "delegates-to-desk"},
+    {"text": "Step 2 includes structured analysis with dimensions like core value, applicability, knowledge type", "id": "has-analysis-template"},
+    {"text": "Step 3 includes an impact scan checking existing skills and CLAUDE.md for overlaps/conflicts", "id": "has-impact-scan"},
+    {"text": "Step 4 recommends a specific digestion path (A-E) with reasoning", "id": "recommends-specific-path"},
+    {"text": "Step 5 explicitly waits for user confirmation before executing changes", "id": "waits-for-confirmation"}
+  ]
+}

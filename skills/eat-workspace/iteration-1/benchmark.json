@@ -1,0 +1,94 @@
+{
+  "skill_name": "eat",
+  "iteration": 1,
+  "configurations": [
+    {
+      "name": "with_skill",
+      "label": "With /eat Skill",
+      "results": {
+        "pass_rate": {"mean": 0.933, "stddev": 0.094},
+        "total_tokens": {"mean": 18604, "stddev": 5265},
+        "duration_seconds": {"mean": 107.2, "stddev": 45.3}
+      },
+      "per_eval": [
+        {
+          "eval_name": "github-repo-absorption",
+          "pass_rate": 0.833,
+          "passed": 5,
+          "total": 6,
+          "total_tokens": 21937,
+          "duration_seconds": 111.4,
+          "failed_assertions": ["delegates-to-desk"]
+        },
+        {
+          "eval_name": "simple-rule-commit-convention",
+          "pass_rate": 1.0,
+          "passed": 5,
+          "total": 5,
+          "total_tokens": 21342,
+          "duration_seconds": 150.2,
+          "failed_assertions": []
+        },
+        {
+          "eval_name": "reject-known-python-typing",
+          "pass_rate": 1.0,
+          "passed": 4,
+          "total": 4,
+          "total_tokens": 12534,
+          "duration_seconds": 59.9,
+          "failed_assertions": []
+        }
+      ]
+    },
+    {
+      "name": "without_skill",
+      "label": "Baseline (No Skill)",
+      "results": {
+        "pass_rate": {"mean": 0.733, "stddev": 0.236},
+        "total_tokens": {"mean": 9804, "stddev": 4032},
+        "duration_seconds": {"mean": 46.7, "stddev": 19.5}
+      },
+      "per_eval": [
+        {
+          "eval_name": "github-repo-absorption",
+          "pass_rate": 0.5,
+          "passed": 3,
+          "total": 6,
+          "total_tokens": 14518,
+          "duration_seconds": 68.6,
+          "failed_assertions": ["has-5-step-structure", "delegates-to-desk", "waits-for-confirmation"]
+        },
+        {
+          "eval_name": "simple-rule-commit-convention",
+          "pass_rate": 1.0,
+          "passed": 5,
+          "total": 5,
+          "total_tokens": 8117,
+          "duration_seconds": 37.6,
+          "failed_assertions": []
+        },
+        {
+          "eval_name": "reject-known-python-typing",
+          "pass_rate": 1.0,
+          "passed": 4,
+          "total": 4,
+          "total_tokens": 6778,
+          "duration_seconds": 34.0,
+          "failed_assertions": []
+        }
+      ]
+    }
+  ],
+  "delta": {
+    "pass_rate": "+20.0%",
+    "total_tokens": "+89.8%",
+    "duration_seconds": "+129.6%"
+  },
+  "analyst_observations": [
+    "Eval 2 (simple rule) and Eval 3 (reject known): both with_skill and baseline achieve 100% pass rate. The CLAUDE.md Knowledge Digestion Protocol alone is sufficient for these simpler cases.",
+    "Eval 1 (GitHub repo) is the differentiator: with_skill scores 83.3% vs baseline 50%. The skill adds structured 5-step workflow and confirmation prompt that baseline lacks.",
+    "The 'delegates-to-desk' assertion fails in BOTH configurations — neither mentions desk skill by name. This suggests the skill instruction for Step 1 delegation isn't prominent enough.",
+    "Token cost: with_skill uses ~1.9x more tokens on average. For Eval 2 (simple rule), the ratio is 2.6x — the 5-step analysis framework may be overkill for trivially simple inputs.",
+    "Key insight: /eat's value is strongest for complex inputs (repos, large docs) where the structured analysis prevents blind spots. For simple rules and rejections, the baseline is equally capable at half the cost."
+  ]
+}

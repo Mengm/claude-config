@@ -18,9 +18,7 @@ When absorbing external knowledge (articles, code, GitHub repos, others' Skills)
 4. **General knowledge Claude already knows** → Do not absorb
 5. **One-off knowledge** → Do not absorb
 
-Workflow: Identify input → Deep analysis → Impact scan (check for conflicts/overlaps with existing Skills/CLAUDE.md) → Propose digestion plan → Execute after user confirmation
-
-Core principle: **The goal of digestion is to distill the essence, not to accumulate quantity.**
+For complex inputs (GitHub repos, articles, other Skills), use the `/eat` skill for structured 5-step analysis, impact scan, and delegation routing.
 
 ## Git Sync Protocol
 

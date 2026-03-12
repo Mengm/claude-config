@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "github-repo-absorption",
+  "configuration": "without_skill",
+  "expectations": [
+    {"text": "Output contains all 5 steps of the eat workflow", "passed": false, "evidence": "Has analysis structure but doesn't follow the formal 5-step eat workflow (no Step 1 input identification)"},
+    {"text": "Step 1 mentions delegating to desk skill for GitHub repo cloning", "passed": false, "evidence": "No mention of desk skill delegation"},
+    {"text": "Step 2 includes structured analysis with dimensions like core value, applicability, knowledge type", "passed": true, "evidence": "Has Core value, Knowledge type, Applicability, Shelf-life, Actionability dimensions"},
+    {"text": "Step 3 includes an impact scan checking existing skills and CLAUDE.md for overlaps/conflicts", "passed": true, "evidence": "Has Impact Scan with Conflicts, Overlaps, Gaps, Stale sections"},
+    {"text": "Step 4 recommends a specific digestion path (A-E) with reasoning", "passed": true, "evidence": "Recommends Path A with detailed reasoning"},
+    {"text": "Step 5 explicitly waits for user confirmation before executing changes", "passed": false, "evidence": "No explicit Step 5 or confirmation prompt"}
+  ]
+}
