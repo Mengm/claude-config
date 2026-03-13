@@ -1,5 +1,10 @@
 # Personal Rules
 
+## Debugging
+
+- When facing crashes, memory corruption, race conditions, or any non-trivial runtime failure, invoke `/crash-debug` before attempting fixes.
+- Never propose a fix before tracing the full call chain and forming a root cause hypothesis.
+
 ## Self-Correction Protocol
 
 When the user corrects any mistake, immediately write a rule to prevent it from recurring:
