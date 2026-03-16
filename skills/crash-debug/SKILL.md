@@ -128,6 +128,26 @@ If your first two fix attempts fail (the crash persists or moves), **stop and re
 
 ---
 
+## Regression Shortcut: git bisect
+
+When the crash is a regression ("it worked before, now it crashes"), **use git bisect before reading code**. This finds the exact breaking commit in O(log n) steps — far faster than tracing code by hand.
+
+```bash
+git bisect start
+git bisect bad HEAD
+git bisect good <last-known-good-commit>
+# Build and test at each step, mark good/bad until bisect identifies the commit
+git bisect reset  # when done
+```
+
+Only AFTER identifying the commit, read the diff to understand the root cause. This replaces Steps 1–3 for regression bugs — jump straight to Step 4 (form hypothesis from the diff).
+
+If the user can't provide a known-good commit, check:
+- Recent release tags or merge commits
+- `git log --oneline -50` to find likely candidates based on description
+
+---
+
 ## Unity-Specific Crash Patterns
 
 ### C++ / C# Boundary Issues

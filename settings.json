@@ -13,7 +13,8 @@
   "model": "opus",
   "enabledPlugins": {
     "claude-notifications-go@claude-notifications-go": true,
-    "code-review@claude-code-plugins": true
+    "code-review@claude-code-plugins": true,
+    "feature-dev@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "claude-code-plugins": {
