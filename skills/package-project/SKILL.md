@@ -1,8 +1,8 @@
 ---
 name: package-project
 description: >
-  Trigger project packaging (T3 Default PC Build) on jn-workflow CI. Connects to
-  user's system Chrome via CDP (no SSO needed). Selects engine branch and triggers
+  Trigger project packaging (T3 Default PC Build) on jn-workflow CI. Uses Playwright
+  browser automation with saved SSO auth state. Selects engine branch and triggers
   default PC package build. Trigger when user says "package project", "打包项目",
   "触发打包", "trigger package", "出包", or /package-project.
 ---
@@ -13,8 +13,8 @@ Trigger a T3 project package build (StandaloneWindows64) on jn-workflow.bytedanc
 
 ## Prerequisites
 
-- Chrome must be running with `--remote-debugging-port=9222`
-- If not, run: `cd ~/.claude/scripts && node chrome-start.js`
+- Playwright installed at `~/.claude/skills/node_modules/playwright`
+- Auth state saved at `~/.claude/playwright/jnworkflow-auth.json`
 - Engine build must be completed first (engine branch available in dropdown)
 
 ## Execution Steps
@@ -29,7 +29,7 @@ Trigger a T3 project package build (StandaloneWindows64) on jn-workflow.bytedanc
 
 3. After user confirms, run:
    ```bash
-   cd ~/.claude/scripts && node trigger-project-package.js "<engine_branch>"
+   cd ~/.claude/skills/package-project && node trigger.js "<engine_branch>"
    ```
 
 4. Options:
@@ -39,6 +39,8 @@ Trigger a T3 project package build (StandaloneWindows64) on jn-workflow.bytedanc
 
 6. Remind user: "Package build takes ~10 minutes. You'll get a feishu notification when done."
 
-## Script Location
+## If Auth Expires
 
-`~/.claude/scripts/trigger-project-package.js`
+```bash
+cd ~/.claude/skills/deploy && node login.js
+```
