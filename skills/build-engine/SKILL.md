@@ -1,11 +1,10 @@
 ---
 name: build-engine
 description: >
-  Trigger Unity engine build on jn-workflow CI. Uses Playwright browser automation
-  with saved SSO auth state. Fills branch name, selects build targets, and clicks
+  Trigger Unity engine build on jn-workflow CI. Connects to user's system Chrome
+  via CDP (no SSO needed). Fills branch name, selects build targets, and clicks
   build. Trigger when user says "build engine", "编译引擎", "触发引擎编译",
-  "trigger engine build", or /build-engine. Requires prior SSO login via
-  jnworkflow-login.js.
+  "trigger engine build", or /build-engine.
 ---
 
 # Build Engine Skill
@@ -14,9 +13,8 @@ Trigger a Unity engine build on jn-workflow.bytedance.net.
 
 ## Prerequisites
 
-- Playwright installed at `~/.claude/scripts/node_modules/playwright`
-- Auth state saved at `~/.claude/playwright/jnworkflow-auth.json`
-- If auth expired, run: `cd ~/.claude/scripts && node jnworkflow-login.js`
+- Chrome must be running with `--remote-debugging-port=9222`
+- If not, run: `cd ~/.claude/scripts && node chrome-start.js`
 
 ## Execution Steps
 
@@ -38,20 +36,18 @@ Trigger a Unity engine build on jn-workflow.bytedance.net.
 4. Common options:
    - `--full-build`: Add FULL_BUILD flag (clears cache)
    - `--skip-smoketest`: Skip smoke test
-   - `--headed`: Run with visible browser (for debugging)
    - `--dry-run`: Preview without submitting
 
 5. Report the build URL to the user.
 
 6. Remind user: "Build takes ~10-15 minutes. You'll get a feishu notification when done."
 
-## If Auth Expires
+## If Connection Fails
 
-If the script reports auth expired:
+Chrome not running with debug port:
 ```bash
-cd ~/.claude/scripts && node jnworkflow-login.js
+cd ~/.claude/scripts && node chrome-start.js
 ```
-Then retry the build command.
 
 ## Script Location
 

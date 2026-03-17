@@ -37,15 +37,13 @@ When user comes back saying engine build is done:
 2. Show parameters and ask confirmation
 3. Run:
    ```bash
-   cd ~/.claude/scripts && node trigger-project-package.js "<engine_branch>" --headed
+   cd ~/.claude/scripts && node trigger-project-package.js "<engine_branch>"
    ```
 4. Report package URL
 
 ## Auth Prerequisite
-If any step reports auth expired:
-```bash
-cd ~/.claude/scripts && node jnworkflow-login.js
-```
+Chrome must be running with `--remote-debugging-port=9222`.
+If not: `cd ~/.claude/scripts && node chrome-start.js`
 
 ## Notes
 - Engine build takes ~10-15 minutes
