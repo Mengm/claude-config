@@ -52,6 +52,26 @@ No user confirmation needed — modify and sync immediately.
 - After creating ANY Feishu document (via feishu-cli or lark-mcp), always grant `full_access` permission to this email
 - feishu-cli command: `feishu-cli perm add <doc_id> --doc-type docx --member-type email --member-id baiyuan.nuanba@bytedance.com --perm full_access --notification`
 
+## Auto Knowledge Archival
+
+After completing any non-trivial code task (reading, debugging, implementing, reviewing), automatically archive what was learned:
+
+1. **Determine the module/topic** — identify which module or subsystem the task touched (e.g., BuildSVT, Animation, GPUScene, Serialization)
+2. **Check existing memory** — read `memory/modules/<module>.md` if it exists; avoid duplicates
+3. **Write or update the module file** — save to `memory/modules/<module>.md` with these sections:
+   - **Overview**: One-line description of what this module does
+   - **Key Files**: Important file paths with brief purpose
+   - **Architecture**: Call chains, data flow, key classes/functions
+   - **Gotchas**: Non-obvious behaviors, bugs encountered, pitfalls
+   - **Related Modules**: Dependencies and interactions
+4. **Update the index** — ensure `memory/MEMORY.md` has a link to the module file under `## Module Knowledge Index`
+5. **Keep it concise** — each module file should be under 100 lines; distill, don't dump
+
+**What to archive**: call chains, key file paths, class relationships, non-obvious behaviors, platform-specific quirks, debugging insights.
+**What NOT to archive**: task-specific details (ticket numbers, temp branch names), code that's obvious from reading, things already in project CLAUDE.md.
+
+This is silent — do not ask the user for confirmation. Just do it at the end of the task.
+
 ## Learned Rules
 
 - **User info → personal CLAUDE.md**: Any user-specific information (email, preferences, credentials, habits) must be saved to personal `~/.claude/CLAUDE.md`, NOT project-level memory files.
