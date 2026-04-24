@@ -1,37 +1,37 @@
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-    "ANTHROPIC_BASE_URL": "http://115.190.103.181:9001",
-    "ANTHROPIC_AUTH_TOKEN": "sk-2d0a7d37a7321e73a94dcd0633a32a3e4f42c45a83208db27be37604bf2d5157"
-  },
-  "permissions": {
-    "allow": [
-      "Bash(grep:*)"
-    ],
-    "defaultMode": "acceptEdits"
-  },
-  "model": "opus[1m]",
-  "enabledPlugins": {
-    "claude-notifications-go@claude-notifications-go": true,
-    "code-review@claude-code-plugins": true,
-    "feature-dev@claude-plugins-official": true,
-    "claude-mem@thedotmack": true
-  },
-  "extraKnownMarketplaces": {
-    "claude-code-plugins": {
-      "source": {
-        "source": "github",
-        "repo": "anthropics/claude-code"
-      }
-    },
-    "thedotmack": {
-      "source": {
-        "source": "github",
-        "repo": "thedotmack/claude-mem"
-      }
-    }
-  },
-  "autoUpdatesChannel": "latest",
-  "skipDangerousModePermissionPrompt": true
+﻿{
+    "env":  {
+                "ANTHROPIC_BASE_URL":  "https://co.yes.vg/team",
+                "ANTHROPIC_AUTH_TOKEN":  "team-a7bc325941dbcca92d3a5198b9c23dfa133ebad6587ab5cc",
+                "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS":  "1",
+                "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC":  "1"
+            },
+    "permissions":  {
+                        "allow":  [
+                                      "Bash(grep:*)"
+                                  ],
+                        "defaultMode":  "acceptEdits"
+                    },
+    "model":  "opus[1m]",
+    "enabledPlugins":  {
+                           "claude-notifications-go@claude-notifications-go":  true,
+                           "code-review@claude-code-plugins":  true,
+                           "feature-dev@claude-plugins-official":  true,
+                           "claude-mem@thedotmack":  true
+                       },
+    "extraKnownMarketplaces":  {
+                                   "claude-code-plugins":  {
+                                                               "source":  {
+                                                                              "source":  "github",
+                                                                              "repo":  "anthropics/claude-code"
+                                                                          }
+                                                           },
+                                   "thedotmack":  {
+                                                      "source":  {
+                                                                     "source":  "github",
+                                                                     "repo":  "thedotmack/claude-mem"
+                                                                 }
+                                                  }
+                               },
+    "autoUpdatesChannel":  "latest",
+    "skipDangerousModePermissionPrompt":  true
 }
