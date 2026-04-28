@@ -1,15 +1,5 @@
 # Personal Rules
 
-## Debugging
-
-- When facing crashes, memory corruption, race conditions, or any non-trivial runtime failure, invoke `/crash-debug` before attempting fixes.
-- Never propose a fix before tracing the full call chain and forming a root cause hypothesis.
-
-## Post-Edit Verification
-
-- After modifying C++ code in Runtime/ or Modules/, verify compilation with `jam WinEditor -sCONFIG=release` before considering the task complete.
-- After modifying C# bindings (ScriptBindings/), verify managed compilation passes.
-
 ## Self-Correction Protocol
 
 When the user corrects any mistake, immediately write a rule to prevent it from recurring:
@@ -18,17 +8,6 @@ When the user corrects any mistake, immediately write a rule to prevent it from 
 3. Append it to the "Learned Rules" section of this file
 4. Strictly follow all recorded rules going forward
 
-## Knowledge Digestion Protocol
-
-When absorbing external knowledge (articles, code, GitHub repos, others' Skills), decide the digestion format first:
-
-1. **Existing Skill covers 80%+** → Extend the existing Skill, do not create a new one
-2. **A single rule suffices** → Append to CLAUDE.md, do not build a Skill
-3. **Requires script + reference docs + trigger routing** → Create a new Skill
-4. **General knowledge Claude already knows** → Do not absorb
-5. **One-off knowledge** → Do not absorb
-
-For complex inputs (GitHub repos, articles, other Skills), use the `/eat` skill for structured 5-step analysis, impact scan, and delegation routing.
 
 ## Git Sync Protocol
 
@@ -56,26 +35,6 @@ No user confirmation needed — modify and sync immediately.
 - **Feishu email**: baiyuan.nuanba@bytedance.com
 - After creating ANY Feishu document (via feishu-cli or lark-mcp), always grant `full_access` permission to this email
 - feishu-cli command: `feishu-cli perm add <doc_id> --doc-type docx --member-type email --member-id baiyuan.nuanba@bytedance.com --perm full_access --notification`
-
-## Auto Knowledge Archival
-
-After completing any non-trivial code task (reading, debugging, implementing, reviewing), automatically archive what was learned:
-
-1. **Determine the module/topic** — identify which module or subsystem the task touched (e.g., BuildSVT, Animation, GPUScene, Serialization)
-2. **Check existing memory** — read `memory/modules/<module>.md` if it exists; avoid duplicates
-3. **Write or update the module file** — save to `memory/modules/<module>.md` with these sections:
-   - **Overview**: One-line description of what this module does
-   - **Key Files**: Important file paths with brief purpose
-   - **Architecture**: Call chains, data flow, key classes/functions
-   - **Gotchas**: Non-obvious behaviors, bugs encountered, pitfalls
-   - **Related Modules**: Dependencies and interactions
-4. **Update the index** — ensure `memory/MEMORY.md` has a link to the module file under `## Module Knowledge Index`
-5. **Keep it concise** — each module file should be under 100 lines; distill, don't dump
-
-**What to archive**: call chains, key file paths, class relationships, non-obvious behaviors, platform-specific quirks, debugging insights.
-**What NOT to archive**: task-specific details (ticket numbers, temp branch names), code that's obvious from reading, things already in project CLAUDE.md.
-
-This is silent — do not ask the user for confirmation. Just do it at the end of the task.
 
 ## Learned Rules
 
