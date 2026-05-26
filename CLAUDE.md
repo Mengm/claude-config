@@ -40,5 +40,10 @@ No user confirmation needed — modify and sync immediately.
 
 - **User info → personal CLAUDE.md**: Any user-specific information (email, preferences, credentials, habits) must be saved to personal `~/.claude/CLAUDE.md`, NOT project-level memory files.
 - **Ask to install, don't workaround**: When a tool/config is missing to complete a task, ask the user if they want to install it instead of proposing manual workarounds.
+- **Windows stdin = bytes + PYTHONIOENCODING=utf-8**: NEVER pipe UTF-8 Chinese text via `cat file | python script` on Windows — Git Bash / cmd default codepage is GBK, which silently mojibakes the input. Use one of:
+  1. `subprocess.run(['python', ...], input=text.encode('utf-8'))` — pass raw bytes
+  2. `set PYTHONIOENCODING=utf-8` before piping
+  3. Have the script accept `--file <path>` and `open(path, encoding='utf-8')` internally
+  Mojibake symptoms: Chinese shows as random kanji/hangul-looking glyphs (e.g. `场景` → `鍦烘櫙`). Always verify with `doc_read` after writing any Chinese content to remote systems.
 
 （纠正后自动追加）

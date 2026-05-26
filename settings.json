@@ -2,7 +2,7 @@
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
     "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
-    "ANTHROPIC_BASE_URL": "http://115.190.103.181:9001",
+    "ANTHROPIC_BASE_URL": "https://api.gameaigc.cn",
     "ANTHROPIC_AUTH_TOKEN": "sk-2d0a7d37a7321e73a94dcd0633a32a3e4f42c45a83208db27be37604bf2d5157"
   },
   "permissions": {
@@ -39,5 +39,6 @@
     }
   },
   "autoUpdatesChannel": "latest",
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "effortLevel": "max"
 }
