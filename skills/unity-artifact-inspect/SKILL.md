@@ -5,124 +5,99 @@ description: 查询 Unity project 中 asset 的引用关系、Library artifact �
 
 # Unity Artifact Inspect
 
-把 Unity project 的 asset 引用关系 / Library import 产物方便地查清楚。**无需打开 Unity Editor。**
+不打开 Unity Editor，就能查清 asset 的引用关系、找到它 import 后在 Library 的文件、把二进制 import 产物转成可读文本。全程**只读**，Editor 开着也能用。
 
-**能力总览：**
-| 动作 | 输入 | 脚本 |
-|---|---|---|
-| **refs** 查引用 | 任意 asset（文本或二进制）或 guid | `scripts/refs.sh` |
-| **inspect** 转可读文本 | 任意 asset 或 guid | `scripts/inspect.sh` |
-| **resolve** guid→磁盘 artifact | asset 或 guid | `scripts/resolve-artifact.sh` |
-| **whose** 反查 artifact→asset | Library/Artifacts 文件 | 见下文 |
+## 入口：unity_artifact.py
 
-**核心机制（全部对 Unity 2022.3 源码 + 真实项目验证）：**
-- 文本 YAML 资产（.mat/.prefab/.asset/.scene…）→ 直接 grep 源文件提引用
-- 二进制资产（.fbx/.png/.tga…）→ 读 LMDB ArtifactDB 找到磁盘 artifact → binary2text → 提引用
-- guid↔asset 反查用 `guid-index.tsv`（覆盖 Assets+Packages+PackageCache）
-- guid→磁盘 artifact 用 `unity_lmdb_dump.exe` 解析 LMDB（详见 `references/lmdb-schema.md`）
+一个统一 CLI，四个子命令：
 
-## 一次性准备：编译 unity_lmdb_dump.exe
+```bash
+PY=~/.claude/skills/unity-artifact-inspect/unity_artifact.py
+PROJ="F:/Perforce/Project-T3-baiyuan/client"   # Unity 工程根（含 Assets/ 和 Library/）
 
-inspect / resolve / 二进制 refs 依赖一个本地小工具（从 Unity 自带 LMDB 源码编译，零外部依赖）：
+python "$PY" refs    "$PROJ" <guid|asset>            # 查引用（最常用）
+python "$PY" resolve "$PROJ" <guid|asset>            # guid -> 磁盘 artifact 文件
+python "$PY" inspect "$PROJ" <guid|asset>            # asset -> binary2text 文本
+python "$PY" index   "$PROJ"                         # 重建 guid->asset 索引（一般自动）
+```
+
+target 可以是 32 位 guid、asset 相对/绝对路径、或 .meta 路径。
+Windows + Git Bash 下若输出中文乱码，先 `export PYTHONIOENCODING=utf-8`。
+
+## 一次性准备
+
+`resolve` / `inspect` / 二进制 `refs` 依赖底层 LMDB 读取工具（从 Unity 自带 LMDB 源码编译，零外部依赖）：
 
 ```cmd
 bin\build-mdb_dump.bat
 ```
 
-产物 `bin/unity_lmdb_dump.exe`。需要 MSVC（脚本自动 source vcvars64.bat，路径在脚本顶部，按需改）。
-**只需编译一次**，之后所有项目复用。已编译则跳过。
+产物 `bin/unity_lmdb_dump.exe`，**只需编译一次**，所有项目复用。需要 MSVC（脚本自动调 vcvars64.bat）。
+为什么不用纯 Python 读 LMDB：LMDB 的磁盘 page 格式是私有二进制结构，纯 Python 逆向不现实且易错；
+而 Unity 自带 `External/LMDB` 的 C 源码，自编译既零依赖又与 Unity 写入时版本绝对一致。Python 只接管
+dump *之上* 的解析。
 
-## 前置约定
+## 子命令说明
 
-### Project 路径
-不持久化。优先级：用户当前消息显式给出 > 对话上下文最近确认 > shell cwd（若是 Unity project）> 反问。
-判定 Unity project：含 `Assets/`。refs 文本路径仅需 .meta；二进制/inspect 需要 `Library/ArtifactDB`。
+### refs — 查引用 ⭐
+- **文本 YAML**（.mat/.prefab/.asset/.scene…）：直接读源文件的 `guid:`
+- **二进制**（.fbx/.png/.tga…）或纯 guid：经 LMDB 找 artifact → binary2text → 提取 `GUID:` 引用
+- 输出每个引用 guid → asset 路径，标 `<builtin>`（内置，guid 前 8 位全 0）/ `<not found>`（已删除或残留引用）
 
-### binary2text.exe 解析顺序（inspect 用）
-1. `--bin2text <path>` 2. `UNITY_BINARY2TEXT` 3. project 同盘 Unity Hub 安装 4. fallback `f:/jnunity-2022-310/artifacts/Binary2Text/release_Win64_VS2019/binary2text.exe`
-
-### 输出目录
-固定 `<project>/Temp/unity-artifact-skill/`：
-- `guid-index.tsv` — guid→asset 全量索引
-- `CurrentRevisions.hexdump` / `ArtifactMetaInfo.hexdump` — LMDB dump 缓存（24h）
-- `<name>.<contentHash8>.txt` — binary2text 输出
-
-## 用法
-
-```bash
-SK=~/.claude/skills/unity-artifact-inspect/scripts
-PROJ="F:/Perforce/Project-T3-baiyuan/client"
-
-# 查引用（自动识别文本/二进制；可传 asset 路径或 32 位 guid）
-bash "$SK/refs.sh" "$PROJ" "Assets/.../M_Rock.mat"
-bash "$SK/refs.sh" "$PROJ" "3994342fc8249c44ea48d18eb68a03fe"   # 一个 .fbx 的 guid
-
-# 转可读文本（返回 .txt 路径），二进制资产也行
-bash "$SK/inspect.sh" "$PROJ" "Assets/.../model.fbx"
-
-# guid -> 磁盘 artifact 文件
-bash "$SK/resolve-artifact.sh" "$PROJ" "<guid 或 asset 路径>"
-
-# 刷新 guid 索引
-bash "$SK/build-guid-index.sh" "$PROJ"
+```
+=== .../M_Rock.mat 引用 12 个外部 guid ===
+(self guid: 22618ec154bb2634ebbcd1e5ed28af15)
+  00aca33abddc3f24ab5389f152b6dbd7  ->  Assets/.../Common_Rock_23a_d.tga
+  97fc7131a7af2bd42987997ac63b7a16  ->  <not found>
+Summary: 11 resolved / 0 builtin / 1 not found
 ```
 
-## 各动作说明
-
-### refs — 查 asset 引用 ⭐
-- 文本 YAML：grep `guid:` 提取 → 反查路径
-- 二进制 / 纯 guid：`inspect.sh` 转文本 → grep `GUID:`/`guid:`（binary2text 用大写 `GUID:`）→ 反查
-- 输出每个引用 guid → asset 路径，分类 `<builtin>` / `<not found>`（已删除或残留引用）
+### resolve — guid → 磁盘 artifact 文件
+输出 `<contentHash>\t<文件路径>\t<字节数>`，一行一个产出文件。
 
 ### inspect — asset → binary2text 文本
-经 `resolve-artifact.sh` 找到磁盘 artifact（不靠猜文件名），再 `binary2text -detailed` 转文本。
-一个 asset 可能产出多个 artifact 文件（主数据 + meta），每个都转。
+经 `resolve` 找到真实 artifact（不靠猜文件名），`binary2text -detailed` 转文本，
+写到 `<project>/Temp/unity-artifact-skill/<name>.<contentHash8>.txt`，返回路径。
+binary2text.exe 解析顺序：`--bin2text` > `UNITY_BINARY2TEXT` > 工程同盘 Unity Hub > fallback jnunity 仓库构建产物。
 
-### resolve-artifact — guid → 磁盘 artifact 文件
-完整 LMDB 链路（详见 `references/lmdb-schema.md`）：
+### index — 重建 guid 索引
+扫 Assets+Packages+PackageCache 的 .meta。首次/24h 过期会自动重建，一般不用手动跑。
+
+## 工作原理
+
+guid → 磁盘 artifact 完整链路（对 Unity 2022.3 源码逐字节验证）：
 ```
-.meta guid --nibble-swap--> LMDB guid
+.meta guid --每字节 nibble 交换--> LMDB guid
   --CurrentRevisions--> 当前 artifactID
   --ArtifactIDToArtifactMetaInfo--> producedFiles[].contentHash
-  --> Library/Artifacts/<ch[0:2]>/<contentHash>
+  --> Library/Artifacts/<ch[:2]>/<contentHash>
 ```
-**磁盘文件名 = contentHash，不是 artifactID 也不是 guid。**
+**磁盘文件名 = producedFile 的 contentHash，不是 artifactID 也不是 guid。**
+guid 在 .meta（`22618ec1…`）和 LMDB（`2216e81c…`）里是每字节高低 nibble 交换的关系。
+`unity_lmdb_dump.exe` 用 `MDB_NOLOCK` 只读打开，Editor 运行时不冲突。
+详见 `references/lmdb-schema.md`。
 
-### whose — artifact 文件 → asset
-1. binary2text 该 artifact 文件 → 文本里第一段 self 信息 / NativeFormatImporter
-2. 或用 `unity_lmdb_dump.exe SourceAssetDB GuidToPath` 反查：value=assetPath，key=guid(nibble-swap 回 .meta 形式)
-GuidToPath 的 value 直接是 ASCII assetPath，最稳。
+## 性能（实测 49 万资产工程）
+- guid 索引首次构建：≈ 几分钟（Python rglob 全量扫 .meta）
+- LMDB dump：CurrentRevisions 2s / ArtifactMetaInfo ≈ 27s，缓存 24h
+- 命中缓存后 resolve / inspect / refs 秒级
 
-## 性能（实测 Project-T3, 49 万资产）
-- guid-index.tsv 首次构建：单进程 awk ≈ 5min（**禁用** `xargs -P -I{}` 逐文件 spawn，≈100min）
-- LMDB dump：CurrentRevisions 2s / ArtifactMetaInfo（大）≈ 27s，缓存 24h，后续秒级
-- resolve / inspect 命中缓存后秒级
-
-## 已知问题与降级
-| 情况 | 行为 |
-|---|---|
-| unity_lmdb_dump.exe 未编译 | 提示运行 `bin/build-mdb_dump.bat` |
-| guid 在 CurrentRevisions 无记录 | "asset 未 import / Library stale" |
-| LMDB 指向的 contentHash 磁盘不存在 | resolve 只输出磁盘真实存在的；可能已 GC |
-| 引用 guid 在 Assets/Packages 查不到 | 标 `<not found>`（已删除或残留引用）|
-| 前 8 位全 0 的 guid | `<builtin>`（Unity 内置资源）|
-| Editor 正在运行 | LMDB 以 MDB_NOLOCK 只读，不受影响 |
+## 注意事项
+- **material 的 artifact 只是 importer 元数据**（NativeFormatImporter）。文本 YAML 资产真实内容在源文件，看 refs / 源文件即可。
+- **贴图/模型 artifact 含真实导入产物**：尺寸、格式（BC7/BC5…）、mipmap、像素数据。
+- **LMDB 与磁盘可能不完全同步**：resolve 只输出磁盘真实存在的文件（指向已 GC contentHash 的记录跳过）。
 
 ## 文件结构
 ```
 unity-artifact-inspect/
 ├── SKILL.md
+├── unity_artifact.py           # ★ 统一 CLI：index / resolve / inspect / refs
 ├── bin/
 │   ├── unity_lmdb_dump.c       # LMDB sub-DB dumper 源码
 │   ├── build-mdb_dump.bat      # MSVC 编译脚本
 │   └── unity_lmdb_dump.exe     # 编译产物（首次运行 .bat 生成）
-├── scripts/
-│   ├── build-guid-index.sh     # guid→asset 全量索引
-│   ├── refs.sh                 # 查引用（主入口）
-│   ├── inspect.sh              # asset→binary2text 文本
-│   └── resolve-artifact.sh     # guid→磁盘 artifact（LMDB）
 └── references/
     ├── library-layout.md       # Library/Artifacts 结构
     ├── binary2text-output.md   # binary2text 输出格式 + guid 正则
-    └── lmdb-schema.md          # ★ 完整 LMDB schema + guid→artifact 链路
+    └── lmdb-schema.md          # 完整 LMDB schema + guid→artifact 链路
 ```
