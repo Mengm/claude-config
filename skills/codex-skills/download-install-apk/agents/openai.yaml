@@ -1,0 +1,4 @@
+interface:
+  display_name: "Download and Install APK"
+  short_description: "Safely download one APK, then install with adb."
+  default_prompt: "Use $download-install-apk to download one APK from a browser page and install it on my connected Android phone."

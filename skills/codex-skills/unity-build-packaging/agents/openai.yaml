@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Build Packaging"
+  short_description: "触发 Unity 打包并分析 BuildPlayer 日志"
+  default_prompt: "Use $unity-build-packaging to trigger or diagnose an Atom Unity package build."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Watch Android Logs"
+  short_description: "Start Android apps and follow process logcat output."
+  default_prompt: "Use $watch-android-logs to start an Android package and record its live process logs."

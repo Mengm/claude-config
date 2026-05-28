@@ -1,0 +1,4 @@
+interface:
+  display_name: "JN Workflow Log Diagnosis"
+  short_description: "诊断 JN Workflow 与 Jenkins 日志"
+  default_prompt: "Use $jn-workflow-log-diagnosis to diagnose a failed JN Workflow or Jenkins build from logs."

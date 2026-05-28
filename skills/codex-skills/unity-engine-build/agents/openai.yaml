@@ -1,0 +1,4 @@
+interface:
+  display_name: "Unity Engine Build"
+  short_description: "诊断 Unity 引擎编译失败"
+  default_prompt: "Use $unity-engine-build to inspect a failed Unity engine build and summarize the root cause."
