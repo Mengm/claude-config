@@ -1,0 +1,13 @@
+# Unity 本地崩溃分析工具依赖
+# 安装：pip install -r requirements.txt
+
+# Windows minidump (.dmp) 文件解析
+# 提供 MinidumpFile、MinidumpFileReader、walk_minidump 等 API
+minidump>=0.0.21
+
+# PDB 符号文件解析（Windows 调试符号）
+# 提供 STREAM_GSYM、STREAM_SECT_HDR 等 API，用于 RVA → 函数名映射
+pdbparse>=1.1
+
+# pdbparse 底层依赖（二进制结构解析）
+construct>=2.8

@@ -1,0 +1,23 @@
+{
+  "skill_name": "jnfs-package-inspect",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我有个 T3 shiwan 的 PC 包体: C:\\Users\\Admin\\Downloads\\t3_publication_cn_shiwan_v0.0.214.7053940_default\\T3_shiwan\\Game_Data\\StreamingAssets\\res, 配套的 manifest 在 D:\\ps5文档\\StandaloneWindows64_common_full.json。帮我看下各类资源在包体里占多少, 重点关注 SVT 数据规模",
+      "expected_output": "Run report mode with --game-data; report should surface total ~153,509 entries, SVT bucket ~22 GB, top extensions (.asset / .ress / .fbx / .gtp). Output Markdown + Excel; mention drilling into the 14 SVT texture sets.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "查一下这几个资产在不在 T3 shiwan 包里, manifest 是 D:\\ps5文档\\StandaloneWindows64_common_full.json:\n- Assets/Res/GUI/StartUp/Start.prefab\n- Assets/Res/GUI/StartUp/JNSettingInfo.json\n- Assets/Res/Definitely/Not/Real.prefab",
+      "expected_output": "Run lookup mode with three --asset-path args. Output should show 2 IN (with hash + pkg_tag=base + ext=.prefab/.json), 1 OUT. If user also provided --game-data, jnfs_package should be common/base/data.0.idx for the two found ones.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "我手上只有 manifest json (D:\\ps5文档\\StandaloneWindows64_common_full.json), 没有 game data 目录。能不能给我一个按扩展名 + SVT/Streaming 的资源占用 Excel 报告? 不需要上传飞书",
+      "expected_output": "Run report mode without --game-data and without auto-uploading to Feishu (only generate local report.md / report.json / report.xlsx). Should NOT include 'Missing in JNFS' section.",
+      "files": []
+    }
+  ]
+}

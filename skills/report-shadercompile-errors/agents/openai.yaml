@@ -1,0 +1,4 @@
+interface:
+  display_name: "Report Shader Compile Errors"
+  short_description: "Build Chinese shader error reports"
+  default_prompt: "Use $report-shadercompile-errors to collect Shader error entries from this Unity log and generate a Chinese Markdown report."
