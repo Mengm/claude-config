@@ -16,3 +16,7 @@ __pycache__/
 !settings.json
 !hooks/
 !hooks/**
+
+# plugins
+!plugins/
+!plugins/**

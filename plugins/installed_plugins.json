@@ -1,0 +1,55 @@
+{
+  "version": 2,
+  "plugins": {
+    "code-review@claude-code-plugins": [
+      {
+        "scope": "user",
+        "installPath": "C:\\Users\\Admin\\.claude\\plugins\\cache\\claude-code-plugins\\code-review\\1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-03-05T12:05:13.262Z",
+        "lastUpdated": "2026-03-05T12:05:13.262Z",
+        "gitCommitSha": "9582ad480f687bbeaf0025852ac4f020b07f20bb"
+      }
+    ],
+    "ralph-loop@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "C:\\Users\\Admin\\.claude\\plugins\\cache\\claude-plugins-official\\ralph-loop\\1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-03-16T12:00:00.000Z",
+        "lastUpdated": "2026-03-30T06:04:40.570Z",
+        "gitCommitSha": "d5c15b861cd23e3102215c26020368ad5134dc47"
+      }
+    ],
+    "feature-dev@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "C:\\Users\\Admin\\.claude\\plugins\\cache\\claude-plugins-official\\feature-dev\\06b6d5b96fe8",
+        "version": "06b6d5b96fe8",
+        "installedAt": "2026-03-16T11:49:12.619Z",
+        "lastUpdated": "2026-05-28T02:59:59.286Z",
+        "gitCommitSha": "d5c15b861cd23e3102215c26020368ad5134dc47"
+      }
+    ],
+    "claude-mem@thedotmack": [
+      {
+        "scope": "user",
+        "installPath": "C:\\Users\\Admin\\.claude\\plugins\\cache\\thedotmack\\claude-mem\\12.1.0",
+        "version": "12.1.0",
+        "installedAt": "2026-04-13T08:36:58.228Z",
+        "lastUpdated": "2026-04-13T08:36:58.228Z",
+        "gitCommitSha": "cde4faae2f33f92d2092ca87537b17b837fdcfb7"
+      }
+    ],
+    "superpowers@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "C:\\Users\\Admin\\.claude\\plugins\\cache\\claude-plugins-official\\superpowers\\5.1.0",
+        "version": "5.1.0",
+        "installedAt": "2026-04-24T11:50:16.665Z",
+        "lastUpdated": "2026-05-08T02:33:41.365Z",
+        "gitCommitSha": "6efe32c9e2dd002d0c394e861e0529675d1ab32e"
+      }
+    ]
+  }
+}

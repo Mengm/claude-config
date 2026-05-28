@@ -1,0 +1,42 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "C:\\Users\\Admin\\.claude\\plugins\\marketplaces\\claude-plugins-official",
+    "lastUpdated": "2026-05-28T11:22:30.423Z"
+  },
+  "claude-notifications-go": {
+    "source": {
+      "source": "github",
+      "repo": "777genius/claude-notifications-go"
+    },
+    "installLocation": "C:\\Users\\Admin\\.claude\\plugins\\marketplaces\\claude-notifications-go",
+    "lastUpdated": "2026-03-03T07:38:08.574Z"
+  },
+  "claude-code-plugins": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-code"
+    },
+    "installLocation": "C:\\Users\\Admin\\.claude\\plugins\\marketplaces\\claude-code-plugins",
+    "lastUpdated": "2026-05-28T11:16:14.747Z"
+  },
+  "thedotmack": {
+    "source": {
+      "source": "github",
+      "repo": "thedotmack/claude-mem"
+    },
+    "installLocation": "C:\\Users\\Admin\\.claude\\plugins\\marketplaces\\thedotmack",
+    "lastUpdated": "2026-04-13T08:36:23.793Z"
+  },
+  "superpowers-marketplace": {
+    "source": {
+      "source": "github",
+      "repo": "obra/superpowers-marketplace"
+    },
+    "installLocation": "C:\\Users\\Admin\\.claude\\plugins\\marketplaces\\superpowers-marketplace",
+    "lastUpdated": "2026-04-24T11:49:49.526Z"
+  }
+}
