@@ -1,225 +1,128 @@
 ---
 name: unity-artifact-inspect
-description: 查询 Unity project 中 asset 的引用关系、Library artifact 文件、用 binary2text 转出可读文本。触发场景 (1) "xxx.mat / xxx.prefab 引用了哪些资源" / "依赖关系" (2) "看 xxx.fbx import 后是什么样" / "binary2text 这个资源" (3) "这个 Library 文件是哪个 asset" / "反查 artifact" (4) 用户提供 .meta 文件、.mat/.prefab 文件、Library/Artifacts 路径、或 Unity project 根目录。即使没明确说 "binary2text"，只要意图是查 import 产物或资源引用都应触发。
+description: 查询 Unity project 中 asset 的引用关系、Library artifact 文件、用 binary2text 转出可读文本。触发场景 (1) "xxx.mat / xxx.prefab / xxx.fbx 引用了哪些资源" / "依赖关系" (2) "看 xxx.fbx import 后是什么样" / "binary2text 这个资源" (3) "这个 Library 文件是哪个 asset" / "反查 artifact" (4) 用户提供 .meta、.mat/.prefab/.fbx/.png 文件、Library/Artifacts 路径、或 Unity project 根目录。即使没明确说 "binary2text"，只要意图是查 import 产物或资源引用都应触发。
 ---
 
 # Unity Artifact Inspect
 
-把 Unity project 的 asset 引用关系 / Library artifact 文件方便地查清楚。
+把 Unity project 的 asset 引用关系 / Library import 产物方便地查清楚。**无需打开 Unity Editor。**
 
-**核心原则（实测验证）：**
-- 引用关系优先从**源文件**（文本 YAML）提取，不依赖 artifact
-- artifact 反查 guid **必须读 LMDB**（artifact 文件名不含 guid，纯字符串前缀匹配不可行）
-- guid 索引必须覆盖 `Assets/` + `Packages/` + `Library/PackageCache/`
-- 大项目（实测 492k .meta）用单进程 awk 扫描 ≈ 5min；用 `-P N -I{}` 逐文件 spawn ≈ 100min+，**禁用**
+**能力总览：**
+| 动作 | 输入 | 脚本 |
+|---|---|---|
+| **refs** 查引用 | 任意 asset（文本或二进制）或 guid | `scripts/refs.sh` |
+| **inspect** 转可读文本 | 任意 asset 或 guid | `scripts/inspect.sh` |
+| **resolve** guid→磁盘 artifact | asset 或 guid | `scripts/resolve-artifact.sh` |
+| **whose** 反查 artifact→asset | Library/Artifacts 文件 | 见下文 |
 
-## 何时触发
+**核心机制（全部对 Unity 2022.3 源码 + 真实项目验证）：**
+- 文本 YAML 资产（.mat/.prefab/.asset/.scene…）→ 直接 grep 源文件提引用
+- 二进制资产（.fbx/.png/.tga…）→ 读 LMDB ArtifactDB 找到磁盘 artifact → binary2text → 提引用
+- guid↔asset 反查用 `guid-index.tsv`（覆盖 Assets+Packages+PackageCache）
+- guid→磁盘 artifact 用 `unity_lmdb_dump.exe` 解析 LMDB（详见 `references/lmdb-schema.md`）
 
-- 用户问某个资产（.mat / .prefab / .asset / .scene / .controller / .fbx 等）引用了哪些资源
-- 用户想看某个资产 import 之后的 SerializedFile 内容（二进制 artifact → 文本）
-- 用户想反查 Library 里某个文件是哪个 asset 生成的
-- 用户提供 `.meta`、`Library/Artifacts/...` 路径、Unity project 根目录
+## 一次性准备：编译 unity_lmdb_dump.exe
+
+inspect / resolve / 二进制 refs 依赖一个本地小工具（从 Unity 自带 LMDB 源码编译，零外部依赖）：
+
+```cmd
+bin\build-mdb_dump.bat
+```
+
+产物 `bin/unity_lmdb_dump.exe`。需要 MSVC（脚本自动 source vcvars64.bat，路径在脚本顶部，按需改）。
+**只需编译一次**，之后所有项目复用。已编译则跳过。
 
 ## 前置约定
 
-### Project 路径来源
+### Project 路径
+不持久化。优先级：用户当前消息显式给出 > 对话上下文最近确认 > shell cwd（若是 Unity project）> 反问。
+判定 Unity project：含 `Assets/`。refs 文本路径仅需 .meta；二进制/inspect 需要 `Library/ArtifactDB`。
 
-skill 不持久化 project 路径。来源优先级：
-1. 用户当前消息显式给出
-2. 对话上下文最近一次确认过的 project 路径
-3. 当前 shell cwd（若是 Unity project）
-4. 都没有 → 反问
-
-**判定是否 Unity project**：含 `Assets/` 子目录即可。不强求 `Library/`（refs 仅需 .meta 索引）。
-
-### binary2text.exe 解析顺序
-
-仅 inspect 动作需要。
-1. `--bin2text <path>`
-2. `UNITY_BINARY2TEXT` 环境变量
-3. project 同盘扫描：
-   - `C:/Program Files/Unity/Hub/Editor/*/Editor/Data/Tools/binary2text.exe`
-   - `D:/Program Files/Unity/Hub/Editor/*/Editor/Data/Tools/binary2text.exe`
-   - 同盘 `Unity/Hub/Editor/*/Editor/Data/Tools/binary2text.exe`
-4. fallback `f:/jnunity-2022-310/artifacts/Binary2Text/release_Win64_VS2019/binary2text.exe`
-5. 找不到 → 报错并打印解析顺序
-
-CLI：`binary2text inputbinaryfile [outputtextfile] [-detailed] [-largebinaryhashonly] [-hexfloat]`，skill 默认带 `-detailed`。
+### binary2text.exe 解析顺序（inspect 用）
+1. `--bin2text <path>` 2. `UNITY_BINARY2TEXT` 3. project 同盘 Unity Hub 安装 4. fallback `f:/jnunity-2022-310/artifacts/Binary2Text/release_Win64_VS2019/binary2text.exe`
 
 ### 输出目录
+固定 `<project>/Temp/unity-artifact-skill/`：
+- `guid-index.tsv` — guid→asset 全量索引
+- `CurrentRevisions.hexdump` / `ArtifactMetaInfo.hexdump` — LMDB dump 缓存（24h）
+- `<name>.<contentHash8>.txt` — binary2text 输出
 
-固定 `<project>/Temp/unity-artifact-skill/`，首次使用 `mkdir -p`。
-- `guid-index.tsv` — guid → asset 路径全量索引（Assets + Packages + PackageCache）
-- `<asset-basename>.<artifactID-first8>.txt` — binary2text 输出
-
-## 三个动作
-
-### 1. refs — 查 asset 引用了哪些资源 ⭐最常用
-
-**输入：** asset 路径（绝对或相对 project 根）或 .meta 路径
-
-**实现路径分两种：**
-
-#### A. 文本 YAML 资产（.mat / .prefab / .asset / .scene / .controller / .anim 等）
-
-直接 grep 源文件，**不需要 artifact 也不需要 binary2text**。
+## 用法
 
 ```bash
-SELF_GUID=$(awk '/^guid: /{print $2; exit}' "$ASSET.meta")
-grep -oE 'guid: [0-9a-f]{32}' "$ASSET" | awk '{print $2}' | sort -u | grep -v "^$SELF_GUID$"
+SK=~/.claude/skills/unity-artifact-inspect/scripts
+PROJ="F:/Perforce/Project-T3-baiyuan/client"
+
+# 查引用（自动识别文本/二进制；可传 asset 路径或 32 位 guid）
+bash "$SK/refs.sh" "$PROJ" "Assets/.../M_Rock.mat"
+bash "$SK/refs.sh" "$PROJ" "3994342fc8249c44ea48d18eb68a03fe"   # 一个 .fbx 的 guid
+
+# 转可读文本（返回 .txt 路径），二进制资产也行
+bash "$SK/inspect.sh" "$PROJ" "Assets/.../model.fbx"
+
+# guid -> 磁盘 artifact 文件
+bash "$SK/resolve-artifact.sh" "$PROJ" "<guid 或 asset 路径>"
+
+# 刷新 guid 索引
+bash "$SK/build-guid-index.sh" "$PROJ"
 ```
 
-判断是否文本 YAML：`head -1 "$ASSET"` 是否以 `%YAML` 开头。
+## 各动作说明
 
-#### B. 二进制资产（.fbx / .png / .tga / .wav / 等）
+### refs — 查 asset 引用 ⭐
+- 文本 YAML：grep `guid:` 提取 → 反查路径
+- 二进制 / 纯 guid：`inspect.sh` 转文本 → grep `GUID:`/`guid:`（binary2text 用大写 `GUID:`）→ 反查
+- 输出每个引用 guid → asset 路径，分类 `<builtin>` / `<not found>`（已删除或残留引用）
 
-先用 inspect 转成文本再 grep：
+### inspect — asset → binary2text 文本
+经 `resolve-artifact.sh` 找到磁盘 artifact（不靠猜文件名），再 `binary2text -detailed` 转文本。
+一个 asset 可能产出多个 artifact 文件（主数据 + meta），每个都转。
 
-```bash
-# binary2text 转出 .txt
-# 然后：
-grep -oE 'Guid [0-9a-f]{32}' "$txt" | awk '{print $2}' | sort -u
+### resolve-artifact — guid → 磁盘 artifact 文件
+完整 LMDB 链路（详见 `references/lmdb-schema.md`）：
 ```
-
-#### 路径反查
-
-每个 guid 用 `guid-index.tsv` 反查 asset 路径，分类：
-- 命中 `Assets/` → 工程资产
-- 命中 `Packages/` 或 `Library/PackageCache/` → 包资产
-- 前 8 字符全 0 → `<builtin>`
-- 都未命中 → `<not found — 可能是已删除资产或 Library 残留引用>`
-
-### 2. inspect — asset → artifact 文本（二进制资产用）
-
-**输入：** asset 路径 或 GUID
-
-**步骤：**
-1. asset 路径 → 读 `.meta` 拿 guid（32 hex）
-2. 找 artifact 文件：
-   - **正确方法**：读 `Library/SourceAssetDB` 和 `Library/ArtifactDB`（LMDB），查 guid 对应的当前 ArtifactID。需要 `mdb_dump` 或 `python -m lmdb`，**第一版未实现**
-   - **当前 fallback**：在 `Library/Artifacts/*/` 下用 `grep -rl` 搜包含该 guid 字节序列的 artifact 文件（慢但可行）
-3. 取目录下最新 mtime 的命中文件
-4. `binary2text.exe <artifact> <Temp/.../<name>.<id8>.txt> -detailed`
-5. 返回 .txt 路径 + 头 50 行预览
-
-**已知限制：**
-- Unity 2022 的 ArtifactID 是独立 hash，**不是 guid+importer hash 拼接**。文件名前缀匹配 guid 的策略**不工作**
-- 必须 LMDB 直读才能精确判定 current artifact，否则只能 grep 全 Library/Artifacts
-
-### 3. whose — artifact → asset
-
-**输入：** `Library/Artifacts/<2>/<rest>` 文件路径
-
-**步骤：**
-1. 读 artifact 文件，提取其中所有 `guid: <32hex>` 出现序列
-2. 第一个出现的 guid 大概率就是 "self guid"（按 SerializedFile 约定，文件头部 ExternalReferences 之前会有 main object 信息）
-3. 用 `guid-index.tsv` 反查路径
-
-**更稳的方法（未实现）：** 读 ArtifactDB 的 reverse mapping。
-
-## 实现脚本
-
-skill 目录下提供两个可直接执行的脚本，调用方式见下面"用法示例"。
-
-### scripts/build-guid-index.sh
-
-```bash
-PROJ="$1"  # Unity project 根
-CACHE="$PROJ/Temp/unity-artifact-skill/guid-index.tsv"
-mkdir -p "$(dirname "$CACHE")"
-cd "$PROJ" || exit 1
-
-# 扫 Assets / Packages / Library/PackageCache 三个位置
-# 单进程 awk，避免逐文件 spawn 开销
-DIRS=()
-[ -d Assets ] && DIRS+=(Assets)
-[ -d Packages ] && DIRS+=(Packages)
-[ -d Library/PackageCache ] && DIRS+=(Library/PackageCache)
-
-find "${DIRS[@]}" -name '*.meta' -type f -print0 2>/dev/null \
-  | xargs -0 awk 'FNR==1{file=FILENAME; sub(/\.meta$/,"",file)} /^guid: /{print $2"\t"file; nextfile}' \
-  > "$CACHE"
-
-echo "Index: $CACHE ($(wc -l < "$CACHE") entries)"
+.meta guid --nibble-swap--> LMDB guid
+  --CurrentRevisions--> 当前 artifactID
+  --ArtifactIDToArtifactMetaInfo--> producedFiles[].contentHash
+  --> Library/Artifacts/<ch[0:2]>/<contentHash>
 ```
+**磁盘文件名 = contentHash，不是 artifactID 也不是 guid。**
 
-### scripts/refs.sh
+### whose — artifact 文件 → asset
+1. binary2text 该 artifact 文件 → 文本里第一段 self 信息 / NativeFormatImporter
+2. 或用 `unity_lmdb_dump.exe SourceAssetDB GuidToPath` 反查：value=assetPath，key=guid(nibble-swap 回 .meta 形式)
+GuidToPath 的 value 直接是 ASCII assetPath，最稳。
 
-```bash
-PROJ="$1"
-ASSET="$2"  # asset 路径（绝对或相对 project）
-CACHE="$PROJ/Temp/unity-artifact-skill/guid-index.tsv"
-
-# 路径规范化
-case "$ASSET" in
-  /*|[A-Za-z]:*) ABS="$ASSET" ;;
-  *) ABS="$PROJ/$ASSET" ;;
-esac
-
-# 索引就绪？
-if [ ! -f "$CACHE" ] || [ -z "$(find "$CACHE" -mtime -1 2>/dev/null)" ]; then
-  bash "$(dirname "$0")/build-guid-index.sh" "$PROJ"
-fi
-
-# self guid
-SELF=$(awk '/^guid: /{print $2; exit}' "$ABS.meta" 2>/dev/null)
-[ -z "$SELF" ] && { echo "ERROR: no .meta for $ABS"; exit 1; }
-
-# 文本 YAML 直接 grep；二进制提示走 inspect
-if head -1 "$ABS" 2>/dev/null | grep -q '^%YAML'; then
-  GUIDS=$(grep -oE 'guid: [0-9a-f]{32}' "$ABS" | awk '{print $2}' | sort -u | grep -v "^$SELF$")
-else
-  echo "ERROR: $ABS 不是文本 YAML，先用 inspect 转出 .txt 再 grep（未自动化）"
-  exit 2
-fi
-
-# 反查
-COUNT=$(echo "$GUIDS" | grep -c .)
-echo "=== $ASSET 引用 $COUNT 个外部 guid ==="
-for g in $GUIDS; do
-  if echo "$g" | grep -qE '^0{7}'; then
-    printf "  %s  ->  <builtin>\n" "$g"
-  else
-    HIT=$(awk -F'\t' -v g="$g" '$1==g{print $2; exit}' "$CACHE")
-    if [ -n "$HIT" ]; then
-      printf "  %s  ->  %s\n" "$g" "$HIT"
-    else
-      printf "  %s  ->  <not found>\n" "$g"
-    fi
-  fi
-done
-```
-
-## 用法示例
-
-Claude 在响应触发时，应直接调用脚本，不要现写一次性命令：
-
-```bash
-# 查引用
-bash ~/.claude/skills/unity-artifact-inspect/scripts/refs.sh \
-  "F:/Perforce/Project-T3-baiyuan/client" \
-  "Assets/ResTemp/Environment/Rock/Materials/M_Rock_AlienStar_Forest_03a.mat"
-
-# 单独建/刷新索引
-bash ~/.claude/skills/unity-artifact-inspect/scripts/build-guid-index.sh \
-  "F:/Perforce/Project-T3-baiyuan/client"
-```
+## 性能（实测 Project-T3, 49 万资产）
+- guid-index.tsv 首次构建：单进程 awk ≈ 5min（**禁用** `xargs -P -I{}` 逐文件 spawn，≈100min）
+- LMDB dump：CurrentRevisions 2s / ArtifactMetaInfo（大）≈ 27s，缓存 24h，后续秒级
+- resolve / inspect 命中缓存后秒级
 
 ## 已知问题与降级
-
 | 情况 | 行为 |
 |---|---|
-| 大项目首次索引慢（实测 49 万 .meta = 5min） | 告诉用户首次会慢，后续命中缓存秒级 |
-| 引用 guid 在 Assets/Packages 都查不到 | 标 `<not found>` — 通常是已删除资产或残留引用 |
-| asset 是二进制 (.fbx / .png) | 暂未自动化，建议先用 binary2text 手转，未来在 refs.sh 加分支 |
-| ArtifactDB / SourceAssetDB 解析 | 第一版未做，留 `references/lmdb-schema.md` 锚点 |
-| Unity Editor 正在运行该 project | .meta 扫描不受影响；LMDB 读会被阻塞 |
-| binary2text 找不到 | 打印解析顺序，让用户传 `--bin2text` |
+| unity_lmdb_dump.exe 未编译 | 提示运行 `bin/build-mdb_dump.bat` |
+| guid 在 CurrentRevisions 无记录 | "asset 未 import / Library stale" |
+| LMDB 指向的 contentHash 磁盘不存在 | resolve 只输出磁盘真实存在的；可能已 GC |
+| 引用 guid 在 Assets/Packages 查不到 | 标 `<not found>`（已删除或残留引用）|
+| 前 8 位全 0 的 guid | `<builtin>`（Unity 内置资源）|
+| Editor 正在运行 | LMDB 以 MDB_NOLOCK 只读，不受影响 |
 
-## 参考
-
-- `references/library-layout.md` — Unity 2022 `Library/Artifacts/` 结构
-- `references/binary2text-output.md` — binary2text 输出格式 + guid 提取正则
-- `references/lmdb-schema.md` — SourceAssetDB / ArtifactDB LMDB schema 锚点
-- `scripts/build-guid-index.sh` — 全量 guid 索引构建
-- `scripts/refs.sh` — refs 主入口
+## 文件结构
+```
+unity-artifact-inspect/
+├── SKILL.md
+├── bin/
+│   ├── unity_lmdb_dump.c       # LMDB sub-DB dumper 源码
+│   ├── build-mdb_dump.bat      # MSVC 编译脚本
+│   └── unity_lmdb_dump.exe     # 编译产物（首次运行 .bat 生成）
+├── scripts/
+│   ├── build-guid-index.sh     # guid→asset 全量索引
+│   ├── refs.sh                 # 查引用（主入口）
+│   ├── inspect.sh              # asset→binary2text 文本
+│   └── resolve-artifact.sh     # guid→磁盘 artifact（LMDB）
+└── references/
+    ├── library-layout.md       # Library/Artifacts 结构
+    ├── binary2text-output.md   # binary2text 输出格式 + guid 正则
+    └── lmdb-schema.md          # ★ 完整 LMDB schema + guid→artifact 链路
+```

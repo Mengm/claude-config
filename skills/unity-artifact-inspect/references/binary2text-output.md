@@ -51,7 +51,10 @@ Material Base
 简化提取（第一版只关心 guid 集合）：
 
 ```bash
-grep -oE 'Guid [0-9a-f]{32}' <txt> | awk '{print $2}' | sort -u
+# 注意：本仓库的 binary2text 在 External References 段用大写带冒号 "GUID: <hex>"
+#   path(1): "" GUID: 249c86c68ea47504daf0d1e64b7df9db Type: 2
+# 兼容两种写法（大写 GUID: 与小写 guid:）：
+grep -hoiE 'guid:? [0-9a-f]{32}' <txt> | grep -oE '[0-9a-f]{32}' | sort -u
 ```
 
 这会拿到所有 ExternalReferences 段里的 guid，等价于"该 asset 引用的所有外部 asset 的 guid 集合"。
