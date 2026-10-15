@@ -5,7 +5,7 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "C:\\Users\\Admin\\.claude\\plugins\\marketplaces\\claude-plugins-official",
-    "lastUpdated": "2026-05-28T11:22:30.423Z"
+    "lastUpdated": "2026-09-20T09:01:58.303Z"
   },
   "claude-notifications-go": {
     "source": {
@@ -13,7 +13,7 @@
       "repo": "777genius/claude-notifications-go"
     },
     "installLocation": "C:\\Users\\Admin\\.claude\\plugins\\marketplaces\\claude-notifications-go",
-    "lastUpdated": "2026-03-03T07:38:08.574Z"
+    "lastUpdated": "2026-05-29T03:13:31.534Z"
   },
   "claude-code-plugins": {
     "source": {
@@ -21,7 +21,7 @@
       "repo": "anthropics/claude-code"
     },
     "installLocation": "C:\\Users\\Admin\\.claude\\plugins\\marketplaces\\claude-code-plugins",
-    "lastUpdated": "2026-05-28T11:16:14.747Z"
+    "lastUpdated": "2026-09-20T08:58:56.633Z"
   },
   "thedotmack": {
     "source": {

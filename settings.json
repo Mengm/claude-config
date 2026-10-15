@@ -11,12 +11,11 @@
     ],
     "defaultMode": "acceptEdits"
   },
-  "model": "opus[1m]",
+  "model": "sonnet",
   "enabledPlugins": {
     "code-review@claude-code-plugins": true,
     "feature-dev@claude-plugins-official": true,
-    "claude-mem@thedotmack": true,
-    "superpowers@claude-plugins-official": true
+    "superpowers@claude-plugins-official": false
   },
   "extraKnownMarketplaces": {
     "claude-code-plugins": {
@@ -38,7 +37,11 @@
       }
     }
   },
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    }
+  },
   "autoUpdatesChannel": "latest",
-  "skipDangerousModePermissionPrompt": true,
-  "effortLevel": "max"
+  "skipDangerousModePermissionPrompt": true
 }

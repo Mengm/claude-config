@@ -46,4 +46,6 @@ No user confirmation needed — modify and sync immediately.
   3. Have the script accept `--file <path>` and `open(path, encoding='utf-8')` internally
   Mojibake symptoms: Chinese shows as random kanji/hangul-looking glyphs (e.g. `场景` → `鍦烘櫙`). Always verify with `doc_read` after writing any Chinese content to remote systems.
 
+- **Large-dump analysis: never whole-file read; rule out cross-session runaway processes before blaming the app.** Reading a 13 GB `.dmp` via `open(p,'rb').read()` commits the entire file to memory. Several such scripts running concurrently drove commit charge to **179 GB** on a 65 GB machine and starved every other process — which surfaced as `Game.exe: out of committed memory` plus GPU TDR (`nvlddmkm` 153 / `Display` 4101 / LiveKernelEvent 141). Before attributing an app failure to the app, run `Get-Process | Sort-Object PrivateMemorySize64` and look for stray `python` / `timeout.exe` children of **other** Claude sessions (`mdctx*.py`, `mdthreads*.py`, `dmp_*.py` in `%TEMP%`). Parse dumps with `mmap` or seek+read of specific RVA ranges — never whole-file reads.
+
 （纠正后自动追加）
