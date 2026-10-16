@@ -45,6 +45,9 @@ No user confirmation needed — modify and sync immediately.
   2. `set PYTHONIOENCODING=utf-8` before piping
   3. Have the script accept `--file <path>` and `open(path, encoding='utf-8')` internally
   Mojibake symptoms: Chinese shows as random kanji/hangul-looking glyphs (e.g. `场景` → `鍦烘櫙`). Always verify with `doc_read` after writing any Chinese content to remote systems.
-- **Large-dump analysis: never whole-file read; rule out cross-session runaway processes before blaming the app.** Reading a 13 GB `.dmp` via `open(p,'rb').read()` commits the entire file to memory. Several such scripts running concurrently drove commit charge to **179 GB** on a 65 GB machine and starved every other process — which surfaced as `Game.exe: out of committed memory` plus GPU TDR (`nvlddmkm` 153 / `Display` 4101 / LiveKernelEvent 141). Before attributing an app failure to the app, run `Get-Process | Sort-Object PrivateMemorySize64` and look for stray `python` / `timeout.exe` children of **other** Claude sessions (`mdctx*.py`, `mdthreads*.py`, `dmp_*.py` in `%TEMP%`). Parse dumps with `mmap` or seek+read of specific RVA ranges — never whole-file reads.
+
+- **Repro runs: never mutate global client state mid-run**: During a crash-repro run, do NOT change global client settings (graphics quality, resolution, driver toggles) as a setup step. A quality switch triggers a bulk texture/PSO reload (observed: game private memory +1.4 GB within one 3 s sample), and on 2026-10-16 the device removal landed 3 s after a 1→4 quality switch.
+  - **Fix**: start the client already at the target quality (set it → restart client → verify), or accept the baseline deviation and record it in the evidence.
+  - **Why**: mid-run state changes perturb the very thing under test, and a temporally adjacent crash becomes impossible to attribute honestly.
 
 （纠正后自动追加）
