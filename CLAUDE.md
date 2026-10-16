@@ -50,4 +50,8 @@ No user confirmation needed — modify and sync immediately.
   - **Fix**: start the client already at the target quality (set it → restart client → verify), or accept the baseline deviation and record it in the evidence.
   - **Why**: mid-run state changes perturb the very thing under test, and a temporally adjacent crash becomes impossible to attribute honestly.
 
+- **Never infer a resource-lifetime bug from a CPU-side destructor**: `UNITY_DELETE(obj)` / `~Dtor()` destroying a wrapper does NOT release the GPU-visible D3D12 resource. In this engine the underlying `ID3D12Resource` goes through `BufferD3D12`/`VersionedBufferD3D12::CleanUp()` → `GfxDeviceD3D12::QueueRelease(resource, allocation)` → `MarkUsed(resource, fence)` → queued release, gated by `D3D12MemoryManager::CanReleaseNow()` comparing `lastUsedFenceValue <= completedFenceValue`. Occurred 2026-10-16: I flagged `D3D12RayTracingAccelStructBinding::ClearHitGroupShaderTables()` calling `UNITY_DELETE` on shader tables as a use-after-free / torn-down-SBT root cause; the user pointed at the real chain and it was refuted.
+  - **Fix**: before claiming "freed/retired too early", follow the chain to the actual D3D12 release call and identify which fence gates it. If the resource release is fence-gated, the CPU dtor is not evidence of anything.
+  - **Why**: the engine deliberately defers D3D12 releases under native graphics jobs (the code comments cite past MMU/Polymorph faults from prematurely reused resources); treating wrapper destruction as resource release manufactures false root causes — I had made this my top hypothesis before retracting it.
+
 （纠正后自动追加）
